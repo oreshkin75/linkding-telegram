@@ -1,0 +1,35 @@
+linters-settings:
+  govet:
+    check-shadowing: true
+  golint:
+    min-confidence: 0.8
+  gocyclo:
+    min-complexity: 10
+  maligned:
+    suggest-new: true
+  dupl:
+    threshold: 100
+  goconst:
+    min-len: 2
+    min-occurrences: 3
+
+linters:
+  disable-all: true
+  enable:
+    - deadcode
+    - errcheck
+    - gocyclo
+    - golint
+    - ineffassign
+    - govet
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+
+run:
+  deadline: 1m
