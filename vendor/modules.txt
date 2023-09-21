@@ -1,0 +1,21 @@
+# github.com/c2fo/testify v0.0.0-20150827203832-fba96363964a
+## explicit
+github.com/c2fo/testify/assert
+# github.com/caarlos0/env/v10 v10.0.0
+## explicit; go 1.17
+github.com/caarlos0/env/v10
+# github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
+## explicit
+# github.com/konsorten/go-windows-terminal-sequences v1.0.3
+## explicit
+github.com/konsorten/go-windows-terminal-sequences
+# github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2
+## explicit
+# github.com/sirupsen/logrus v1.6.0
+## explicit; go 1.13
+github.com/sirupsen/logrus
+# github.com/stretchr/testify v1.8.4
+## explicit; go 1.20
+# golang.org/x/sys v0.15.0
+## explicit; go 1.18
+golang.org/x/sys/unix
