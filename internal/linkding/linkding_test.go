@@ -21,7 +21,7 @@ func TestGetBookmarks(t *testing.T) {
 
 	lkdg := NewLinkding(conf)
 
-	resp, err := lkdg.GetBookmarks(context.Background(), "", "100", "")
+	resp, err := lkdg.GetBookmarks(context.Background(), "", "1", "")
 	require.NoError(t, err)
 
 	fmt.Println(string(resp))
