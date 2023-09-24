@@ -24,7 +24,6 @@ type LinkdingConf struct {
 func GetConfig() (*Config, error) {
 	k := koanf.New(".")
 
-	// Загрузка переменных окружения.
 	if err := k.Load(env.Provider("LGTG_", ".", func(s string) string {
 		return s
 	}), nil); err != nil {
