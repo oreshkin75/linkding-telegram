@@ -2,8 +2,7 @@ package telegram
 
 import (
 	"fmt"
-	"net/url"
-	"strings"
+	"linkding-telegram/internal/utils"
 
 	"github.com/NicoNex/echotron/v3"
 )
@@ -18,29 +17,20 @@ func NewTelegram(tgToken string) *Telegram {
 	}
 }
 
-func (t *Telegram) PollingUpdates() error {
-	api := echotron.NewAPI(t.tgToken)
-
+func (t *Telegram) PollingUrlUpdates() {
 	for u := range echotron.PollingUpdates(t.tgToken) {
 		if u.Message != nil {
 			if u.Message.Text != "" {
-				words := strings.Fields(u.Message.Text)
-				var links []string
-
-				for _, word := range words {
-					u, err := url.Parse(word)
-					if err != nil {
-						continue
-					}
-					if u.Scheme == "http" || u.Scheme == "https" {
-						links = append(links, word)
-					}
-				}
+				links := utils.ParseURLs(u.Message.Text)
 
 				fmt.Println("==", links)
 			}
 			if u.Message.CaptionEntities != nil {
-				fmt.Println("---", len(u.Message.CaptionEntities))
+				for _, msg := range u.Message.CaptionEntities {
+					if msg.URL != "" {
+						fmt.Println(msg.URL)
+					}
+				}
 			}
 			if u.Message.Entities != nil {
 				for _, msg := range u.Message.Entities {
@@ -50,10 +40,10 @@ func (t *Telegram) PollingUpdates() error {
 				}
 			}
 		}
-		if u.Message.Text == "/start" {
-			api.SendMessage("Hello world", u.ChatID(), nil)
-		}
 	}
+}
 
-	return nil
+func (t *Telegram) SelectLink(chatID int64, s []string) {
+	api := echotron.NewAPI(t.tgToken)
+	api.SendMessage("Select the desired link", chatID, nil)
 }
