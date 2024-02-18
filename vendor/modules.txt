@@ -4,12 +4,14 @@ github.com/NicoNex/echotron/v3
 # github.com/c2fo/testify v0.0.0-20150827203832-fba96363964a
 ## explicit
 github.com/c2fo/testify/assert
-github.com/c2fo/testify/require
 # github.com/knadh/koanf v1.5.0
 ## explicit; go 1.12
 github.com/knadh/koanf
 github.com/knadh/koanf/maps
 github.com/knadh/koanf/providers/env
+# github.com/konsorten/go-windows-terminal-sequences v1.0.3
+## explicit
+github.com/konsorten/go-windows-terminal-sequences
 # github.com/mitchellh/copystructure v1.2.0
 ## explicit; go 1.15
 github.com/mitchellh/copystructure
@@ -19,3 +21,10 @@ github.com/mitchellh/mapstructure
 # github.com/mitchellh/reflectwalk v1.0.2
 ## explicit
 github.com/mitchellh/reflectwalk
+# github.com/sirupsen/logrus v1.6.0
+## explicit; go 1.13
+github.com/sirupsen/logrus
+# golang.org/x/sys v0.0.0-20210603081109-ebe580a85c40
+## explicit; go 1.17
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix

@@ -10,6 +10,8 @@ import (
 type Config struct {
 	TGBitConf    TGBotConf
 	LinkdingConf LinkdingConf
+	LogLevel     string
+	LogFile      bool
 }
 
 type TGBotConf struct {
@@ -38,5 +40,7 @@ func GetConfig() (*Config, error) {
 			LinkdingAddr: k.String("LGTG_LINKDING_ADDRESS"),
 			UserToken:    k.String("LGTG_LINKDING_USER_TOKEN"),
 		},
+		LogLevel: k.String("LGTG_LOG_LEVEL"),
+		LogFile:  k.Bool("LGTG_LOG_FILE"),
 	}, nil
 }

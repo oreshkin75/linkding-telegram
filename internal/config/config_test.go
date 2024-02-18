@@ -3,19 +3,57 @@ package config
 import (
 	"testing"
 
-	"github.com/c2fo/testify/require"
+	"github.com/c2fo/testify/assert"
 )
 
 func TestConfig(t *testing.T) {
-	lnkgAddr := "192.168.1.1"
-	botToken := "AFBHASBFAJKFNAKBFAHFA"
+	testCase := []struct {
+		name  string
+		input struct {
+			linkdingAddr string
+			botToken     string
+			logLevel     string
+		}
+		expected struct {
+			linkdingAddr string
+			botToken     string
+			logLevel     string
+		}
+	}{{
+		name: "Simple test",
+		input: struct {
+			linkdingAddr string
+			botToken     string
+			logLevel     string
+		}{
+			linkdingAddr: "192.168.1.1",
+			botToken:     "AFBHASBFAJKFNAKBFAHFA",
+			logLevel:     "info",
+		},
+		expected: struct {
+			linkdingAddr string
+			botToken     string
+			logLevel     string
+		}{
+			linkdingAddr: "192.168.1.1",
+			botToken:     "AFBHASBFAJKFNAKBFAHFA",
+			logLevel:     "info",
+		},
+	},
+	}
 
-	t.Setenv("LGTG_BOT_TOKEN", botToken)
-	t.Setenv("LGTG_LINKDING_ADDRESS", lnkgAddr)
+	for _, tc := range testCase {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Setenv("LGTG_BOT_TOKEN", tc.input.botToken)
+			t.Setenv("LGTG_LINKDING_ADDRESS", tc.input.linkdingAddr)
+			t.Setenv("LGTG_LOG_LEVEL", tc.input.logLevel)
 
-	config, err := GetConfig()
-	require.NoError(t, err)
+			config, err := GetConfig()
+			assert.NoError(t, err)
 
-	require.Equal(t, config.LinkdingConf.LinkdingAddr, lnkgAddr)
-	require.Equal(t, config.TGBitConf.Token, botToken)
+			assert.Equal(t, config.LinkdingConf.LinkdingAddr, tc.expected.linkdingAddr)
+			assert.Equal(t, config.TGBitConf.Token, tc.expected.botToken)
+			assert.Equal(t, config.LogLevel, tc.expected.logLevel)
+		})
+	}
 }

@@ -14,6 +14,7 @@ func ParseURLs(str string) []string {
 		if err != nil {
 			continue
 		}
+
 		if u.Scheme == "http" || u.Scheme == "https" {
 			links = append(links, word)
 		}

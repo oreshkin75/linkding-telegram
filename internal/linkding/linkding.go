@@ -3,6 +3,7 @@ package linkding
 import (
 	"context"
 	"errors"
+	"fmt"
 	"io"
 	"linkding-telegram/internal/config"
 	"net/http"
@@ -14,7 +15,7 @@ type Linkding struct {
 	lgToken string
 }
 
-func NewLinkding(opts config.LinkdingConf) *Linkding {
+func New(opts config.LinkdingConf) *Linkding {
 	return &Linkding{
 		addr:    opts.LinkdingAddr,
 		lgToken: opts.UserToken,
@@ -24,7 +25,7 @@ func NewLinkding(opts config.LinkdingConf) *Linkding {
 func (l *Linkding) GetBookmarks(ctx context.Context, filters, limit, offset string) ([]byte, error) {
 	baseURL, err := url.Parse(l.addr + "/api/bookmarks")
 	if err != nil {
-		return nil, errors.Join(errors.New("failed to parse url"), err)
+		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 
 	params := url.Values{}

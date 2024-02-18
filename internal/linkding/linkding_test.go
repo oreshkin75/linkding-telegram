@@ -6,7 +6,7 @@ import (
 	"linkding-telegram/internal/config"
 	"testing"
 
-	"github.com/c2fo/testify/require"
+	"github.com/c2fo/testify/assert"
 )
 
 func TestGetBookmarks(t *testing.T) {
@@ -19,10 +19,10 @@ func TestGetBookmarks(t *testing.T) {
 		UserToken:    lkdgUsrToken,
 	}
 
-	lkdg := NewLinkding(conf)
+	lkdg := New(conf)
 
 	resp, err := lkdg.GetBookmarks(context.Background(), "", "1", "")
-	require.NoError(t, err)
+	assert.NoError(t, err)
 
 	fmt.Println(string(resp))
 }
