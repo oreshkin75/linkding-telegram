@@ -3,7 +3,6 @@ module linkding-telegram
 go 1.21.1
 
 require (
-	github.com/NicoNex/echotron/v3 v3.26.1
 	github.com/c2fo/testify v0.0.0-20150827203832-fba96363964a
 	github.com/knadh/koanf v1.5.0
 	github.com/sirupsen/logrus v1.6.0

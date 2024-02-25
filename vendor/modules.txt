@@ -1,6 +1,5 @@
 # github.com/NicoNex/echotron/v3 v3.26.1
 ## explicit; go 1.19
-github.com/NicoNex/echotron/v3
 # github.com/c2fo/testify v0.0.0-20150827203832-fba96363964a
 ## explicit
 github.com/c2fo/testify/assert

@@ -59,7 +59,7 @@ func main() {
 		log.Fatalf("failed to setup logger: %s", err.Error())
 	}
 
-	tg := telegram.New(config.TGBitConf.Token, log)
+	tg := telegram.New(config.TGBitConf, log)
 
 	tg.PollUpdates(context.Background())
 }

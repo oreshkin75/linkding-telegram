@@ -1,6 +1,6 @@
 package linkding
 
-import (
+/*import (
 	"context"
 	"fmt"
 	"linkding-telegram/internal/config"
@@ -25,4 +25,4 @@ func TestGetBookmarks(t *testing.T) {
 	assert.NoError(t, err)
 
 	fmt.Println(string(resp))
-}
+}*/

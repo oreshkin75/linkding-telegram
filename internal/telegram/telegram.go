@@ -6,8 +6,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"linkding-telegram/internal/config"
 	"linkding-telegram/internal/utils"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -25,16 +27,26 @@ type Telegram struct {
 	log               *logrus.Logger
 }
 
-func New(botToken string, log *logrus.Logger) *Telegram {
+func New(opts config.TGBotConf, log *logrus.Logger) *Telegram {
 	return &Telegram{
-		botToken:          botToken,
-		tgApiUrlWithToken: tgApiURL + botToken,
+		botToken:          opts.Token,
+		tgApiUrlWithToken: tgApiURL + opts.Token,
 		log:               log,
 	}
 }
 
-func (t *Telegram) getUpdates(ctx context.Context, offset int) ([]Update, error) {
-	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s%s?offset=%d", t.tgApiUrlWithToken, getUpdatesMethod, offset), nil)
+func (t *Telegram) getUpdates(ctx context.Context, offset string) ([]Update, error) {
+	baseURL, err := url.Parse(t.tgApiUrlWithToken + getUpdatesMethod)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse get updates url: %w", err)
+	}
+
+	params := url.Values{}
+	params.Add("offset", offset)
+
+	baseURL.RawQuery = params.Encode()
+
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL.String(), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to make get updates GET request: %w", err)
 	}
@@ -95,18 +107,13 @@ func (t *Telegram) PollUpdates(ctx context.Context) {
 			t.log.Info("receiving updates has been stopped")
 			return
 		default:
-			updates, err := t.getUpdates(ctx, lastUpdateID+1)
+			updates, err := t.getUpdates(ctx, fmt.Sprintf("%d", lastUpdateID+1))
 			if err != nil {
 				t.log.Error("failed to get updates from telegram")
 				continue
 			}
 
 			for _, update := range updates {
-				t.log.WithFields(logrus.Fields{ // TODO test
-					"message": update.Message.Text,
-					"chat_id": update.Message.Chat.ID,
-				}).Info("tg message")
-
 				if update.Message.Text != "" {
 					links := utils.ParseURLs(update.Message.Text)
 					t.log.WithFields(logrus.Fields{ // TODO test
@@ -125,54 +132,3 @@ func (t *Telegram) PollUpdates(ctx context.Context) {
 		}
 	}
 }
-
-/*type Telegram struct {
-	tgToken string
-}
-
-func New(tgToken string) *Telegram {
-	return &Telegram{
-		tgToken: tgToken,
-	}
-}
-
-func (t *Telegram) PollingURLUpdates() {
-	for u := range echotron.PollingUpdates(t.tgToken) {
-		if u.Message == nil {
-			return
-		}
-
-		if u.Message.Text != "" {
-			links := utils.ParseURLs(u.Message.Text)
-
-			fmt.Println("==", links) // TODO for test purposes
-		}
-
-		if u.Message.CaptionEntities != nil {
-			for _, msg := range u.Message.CaptionEntities {
-				if msg.URL != "" {
-					fmt.Println(msg.URL) // TODO test purposes only
-				}
-			}
-		}
-
-		if u.Message.Entities != nil {
-			for _, msg := range u.Message.Entities {
-				if msg.URL != "" {
-					fmt.Println(msg.URL) // TODO for test purpose
-				}
-			}
-		}
-
-	}
-}
-
-func (t *Telegram) SelectLink(chatID int64, s []string) error {
-	api := echotron.NewAPI(t.tgToken)
-	_, err := api.SendMessage("Select the desired link", chatID, nil)
-	if err != nil {
-		return fmt.Errorf("failed to send tg message: %w", err)
-	}
-
-	return nil
-}*/
