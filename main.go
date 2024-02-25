@@ -1,28 +1,30 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"linkding-telegram/internal/config"
+	"linkding-telegram/internal/telegram"
 	"os"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 )
+
+var log = logrus.New()
 
 func init() {
 	log.SetOutput(os.Stdout)
 
-	log.SetFormatter(&log.TextFormatter{
+	log.SetFormatter(&logrus.TextFormatter{
 		DisableColors: false,
 		FullTimestamp: true,
 	})
 
-	log.SetLevel(log.WarnLevel)
+	log.SetLevel(logrus.InfoLevel)
 }
 
-func setupLogger(logLevel string, isLogToFile bool) error {
-	const logPath = "log.txt"
-
-	if isLogToFile {
+func setupLogger(logLevel, logPath string) error {
+	if logPath != "" {
 		file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 		if err != nil {
 			return fmt.Errorf("failed to open/create log file: %w", err)
@@ -33,15 +35,15 @@ func setupLogger(logLevel string, isLogToFile bool) error {
 
 	switch logLevel {
 	case "info":
-		log.SetLevel(log.InfoLevel)
+		log.SetLevel(logrus.InfoLevel)
 	case "warn":
-		log.SetLevel(log.WarnLevel)
+		log.SetLevel(logrus.WarnLevel)
 	case "error":
-		log.SetLevel(log.ErrorLevel)
+		log.SetLevel(logrus.ErrorLevel)
 	case "fatal":
-		log.SetLevel(log.FatalLevel)
+		log.SetLevel(logrus.FatalLevel)
 	case "panic":
-		log.SetLevel(log.PanicLevel)
+		log.SetLevel(logrus.PanicLevel)
 	}
 
 	return nil
@@ -50,9 +52,14 @@ func setupLogger(logLevel string, isLogToFile bool) error {
 func main() {
 	config, err := config.GetConfig()
 	if err != nil {
-		log.Fatalf("failed to read configuration file: %w", err)
+		log.Fatalf("failed to read configuration file: %s", err.Error())
 	}
 
-	fmt.Println(config)
+	if err := setupLogger(config.LogLevel, config.LogFile); err != nil {
+		log.Fatalf("failed to setup logger: %s", err.Error())
+	}
 
+	tg := telegram.New(config.TGBitConf.Token, log)
+
+	tg.PollUpdates(context.Background())
 }

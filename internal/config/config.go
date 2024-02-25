@@ -1,7 +1,7 @@
 package config
 
 import (
-	"errors"
+	"fmt"
 
 	"github.com/knadh/koanf"
 	"github.com/knadh/koanf/providers/env"
@@ -11,7 +11,7 @@ type Config struct {
 	TGBitConf    TGBotConf
 	LinkdingConf LinkdingConf
 	LogLevel     string
-	LogFile      bool
+	LogFile      string
 }
 
 type TGBotConf struct {
@@ -29,7 +29,7 @@ func GetConfig() (*Config, error) {
 	if err := k.Load(env.Provider("LGTG_", ".", func(s string) string {
 		return s
 	}), nil); err != nil {
-		return nil, errors.Join(errors.New("failed to load configuration"), err)
+		return nil, fmt.Errorf("failed to load configuration: %w", err)
 	}
 
 	return &Config{
@@ -41,6 +41,6 @@ func GetConfig() (*Config, error) {
 			UserToken:    k.String("LGTG_LINKDING_USER_TOKEN"),
 		},
 		LogLevel: k.String("LGTG_LOG_LEVEL"),
-		LogFile:  k.Bool("LGTG_LOG_FILE"),
+		LogFile:  k.String("LGTG_LOG_FILE"),
 	}, nil
 }
