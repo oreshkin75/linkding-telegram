@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	bookmarksMethods = "/api/bookmarks"
+	bookmarksMethods = "/api/bookmarks/"
 )
 
 type Linkding struct {
@@ -85,6 +85,7 @@ func (l *Linkding) CreateBookmark(ctx context.Context, opts *CreateBookmark) ([]
 	}
 
 	req.Header.Add("Authorization", "Token "+l.lgToken)
+	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -92,6 +93,10 @@ func (l *Linkding) CreateBookmark(ctx context.Context, opts *CreateBookmark) ([]
 	}
 
 	defer resp.Body.Close()
+
+	if resp.StatusCode != 201 {
+		l.log.Errorf("status code of POST %s - %d", l.addr+bookmarksMethods, resp.StatusCode)
+	}
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

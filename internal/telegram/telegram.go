@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"linkding-telegram/internal/config"
+	"linkding-telegram/internal/linkding"
 	"linkding-telegram/internal/utils"
 	"net/http"
 	"net/url"
@@ -24,14 +25,16 @@ const (
 type Telegram struct {
 	botToken          string
 	tgApiUrlWithToken string
+	linkding          *linkding.Linkding
 	log               *logrus.Logger
 }
 
-func New(opts config.TGBotConf, log *logrus.Logger) *Telegram {
+func New(opts config.TGBotConf, linkding *linkding.Linkding, log *logrus.Logger) *Telegram {
 	return &Telegram{
 		botToken:          opts.Token,
 		tgApiUrlWithToken: tgApiURL + opts.Token,
 		log:               log,
+		linkding:          linkding,
 	}
 }
 
@@ -119,6 +122,20 @@ func (t *Telegram) PollUpdates(ctx context.Context) {
 					t.log.WithFields(logrus.Fields{ // TODO test
 						"links": links,
 					}).Info("links in message")
+
+					for _, link := range links {
+						resp, err := t.linkding.CreateBookmark(ctx, &linkding.CreateBookmark{
+							URL:    link,
+							Unread: true,
+						})
+
+						if err != nil {
+							t.log.Error(err)
+							continue
+						}
+
+						fmt.Println(string(resp))
+					}
 				}
 
 				if err := t.sendMessage(ctx, update.Message.Chat.ID, "Получено: "+update.Message.Text); err != nil { // TODO test

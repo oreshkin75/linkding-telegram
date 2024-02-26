@@ -2,8 +2,23 @@ version: '3'
 
 services:
   linkding-telegram:
+    container_name: "linkding-telegram"
     image: linkding-telegram:latest
     ports:
       - "8080:8080"
     env_file:
       - .env
+  linkding:
+    container_name: "linkding"
+    image: sissbruecker/linkding:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./linkding/data:/etc/linkding/data"
+    environment:
+      - LD_HOST_PORT=9090
+      - LD_CONTAINER_NAME=linkding
+      - LD_HOST_DATA_DIR=./data
+      - LD_SUPERUSER_NAME=admin
+      - LD_SUPERUSER_PASSWORD=123456789
+    restart: unless-stopped

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"linkding-telegram/internal/config"
+	"linkding-telegram/internal/linkding"
 	"linkding-telegram/internal/telegram"
 	"os"
 
@@ -59,7 +60,8 @@ func main() {
 		log.Fatalf("failed to setup logger: %s", err.Error())
 	}
 
-	tg := telegram.New(config.TGBitConf, log)
+	linkding := linkding.New(config.LinkdingConf, log)
+	tg := telegram.New(config.TGBitConf, linkding, log)
 
 	tg.PollUpdates(context.Background())
 }
