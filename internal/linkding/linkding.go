@@ -23,10 +23,10 @@ type Linkding struct {
 	log     *logrus.Logger
 }
 
-func New(opts config.LinkdingConf, log *logrus.Logger) *Linkding {
+func New(opts *config.Config, log *logrus.Logger) *Linkding {
 	return &Linkding{
-		addr:    opts.LinkdingAddr,
-		lgToken: opts.UserToken,
+		addr:    opts.LinkdingConf.LinkdingAddr,
+		lgToken: opts.LinkdingConf.UserToken,
 		log:     log,
 	}
 }

@@ -52,7 +52,7 @@ func TestConfig(t *testing.T) {
 			assert.NoError(t, err)
 
 			assert.Equal(t, config.LinkdingConf.LinkdingAddr, tc.expected.linkdingAddr)
-			assert.Equal(t, config.TGBitConf.Token, tc.expected.botToken)
+			assert.Equal(t, config.TGBotConf.Token, tc.expected.botToken)
 			assert.Equal(t, config.LogLevel, tc.expected.logLevel)
 		})
 	}

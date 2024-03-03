@@ -60,8 +60,16 @@ func main() {
 		log.Fatalf("failed to setup logger: %s", err.Error())
 	}
 
-	linkding := linkding.New(config.LinkdingConf, log)
-	tg := telegram.New(config.TGBitConf, linkding, log)
+	linkding := linkding.New(config, log)
+	tg := telegram.New(config, linkding, log)
 
-	tg.PollUpdates(context.Background())
+	go tg.PollUpdates(context.Background())
+
+	for update := range tg.GetUpdate() {
+		fmt.Println("++++", update.Message.LinkPrev)
+		fmt.Println("====", update)
+		for _, entity := range update.Message.MessageEntities {
+			fmt.Println("----", entity)
+		}
+	}
 }
