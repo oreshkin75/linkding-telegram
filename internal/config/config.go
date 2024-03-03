@@ -1,86 +1,59 @@
 package config
 
 import (
-	"errors"
 	"fmt"
-
-	"github.com/knadh/koanf"
-	"github.com/knadh/koanf/providers/confmap"
-	"github.com/knadh/koanf/providers/env"
+	"github.com/spf13/viper"
 )
 
 type Config struct {
-	TGBotConf struct {
-		Token             string
-		UpdatesBufferSize int
-		PermittedChatID   int
-		PollIntervalSec   int
-	}
-	LinkdingConf struct {
-		LinkdingAddr string
-		UserToken    string
-	}
-	LogLevel string
-	LogFile  string
+	TGBotConf    TGBotConf
+	LinkdingConf LinkdingConf
+	LogLevel     string
+	LogFile      string
+}
+
+type TGBotConf struct {
+	Token             string
+	UpdatesBufferSize int
+	PermittedChatIDs  []int
+	PollIntervalSec   int
+}
+
+type LinkdingConf struct {
+	LinkdingAddr string
+	UserToken    string
 }
 
 func GetConfig() (*Config, error) {
-	k := koanf.New(".")
+	viper.SetEnvPrefix("LGTG")
+	viper.AutomaticEnv()
 
-	defaults := map[string]interface{}{
-		"LGTG_BOT_TOKEN":                "",
-		"LGTG_BOT_UPDATES_BUFFER_SIZE":  1,
-		"LGTG_BOT_PERMITTED_CHAT_ID":    0,
-		"LGTG_BOT_POLL_INTERVAL_SECOND": 1,
-		"LGTG_LINKDING_ADDRESS":         "",
-		"LGTG_LINKDING_USER_TOKEN":      "",
-		"LGTG_LOG_LEVEL":                "info",
-		"LGTG_LOG_FILE":                 "",
-	}
-	if err := k.Load(confmap.Provider(defaults, "."), nil); err != nil {
-		return nil, fmt.Errorf("failed to load default configuration: %w", err)
-	}
+	viper.SetDefault("BOT_TOKEN", "")
+	viper.SetDefault("BOT_UPDATES_BUFFER_SIZE", 1)
+	viper.SetDefault("BOT_PERMITTED_CHAT_IDS", []int{})
+	viper.SetDefault("BOT_POLL_INTERVAL_SECOND", 1)
+	viper.SetDefault("LINKDING_ADDRESS", "")
+	viper.SetDefault("LINKDING_USER_TOKEN", "")
+	viper.SetDefault("LOG_LEVEL", "info")
+	viper.SetDefault("LOG_FILE", "")
 
-	if err := k.Load(env.Provider("LGTG_", ".", func(s string) string {
-		return s
-	}), nil); err != nil {
-		return nil, fmt.Errorf("failed to load configuration: %w", err)
-	}
-
-	ret := &Config{
-		TGBotConf: struct {
-			Token             string
-			UpdatesBufferSize int
-			PermittedChatID   int
-			PollIntervalSec   int
-		}{
-			Token:             k.String("LGTG_BOT_TOKEN"),
-			UpdatesBufferSize: k.Int("LGTG_BOT_UPDATES_BUFFER_SIZE"),
-			PermittedChatID:   k.Int("LGTG_BOT_PERMITTED_CHAT_ID"),
-			PollIntervalSec:   k.Int("LGTG_BOT_POLL_INTERVAL_SECOND"),
+	fmt.Println("---", viper.GetStringSlice("BOT_PERMITTED_CHAT_ID"))
+	config := &Config{
+		TGBotConf: TGBotConf{
+			Token:             viper.GetString("BOT_TOKEN"),
+			UpdatesBufferSize: viper.GetInt("BOT_UPDATES_BUFFER_SIZE"),
+			PermittedChatIDs:  viper.GetIntSlice("BOT_PERMITTED_CHAT_ID"),
+			PollIntervalSec:   viper.GetInt("BOT_POLL_INTERVAL_SECOND"),
 		},
-		LinkdingConf: struct {
-			LinkdingAddr string
-			UserToken    string
-		}{
-			LinkdingAddr: k.String("LGTG_LINKDING_ADDRESS"),
-			UserToken:    k.String("LGTG_LINKDING_USER_TOKEN"),
+		LinkdingConf: LinkdingConf{
+			LinkdingAddr: viper.GetString("LINKDING_ADDRESS"),
+			UserToken:    viper.GetString("LINKDING_USER_TOKEN"),
 		},
-		LogLevel: k.String("LGTG_LOG_LEVEL"),
-		LogFile:  k.String("LGTG_LOG_FILE"),
+		LogLevel: viper.GetString("LOG_LEVEL"),
+		LogFile:  viper.GetString("LOG_FILE"),
 	}
 
-	if ret.LinkdingConf.LinkdingAddr == "" {
-		return nil, errors.New("linkding addr is empty")
-	}
-
-	if ret.LinkdingConf.UserToken == "" {
-		return nil, errors.New("linkding token is empty")
-	}
-
-	if ret.TGBotConf.Token == "" {
-		return nil, errors.New("telegram bot token is empty")
-	}
-
-	return ret, nil
+	fmt.Println("====", config.TGBotConf.PermittedChatIDs, len(config.TGBotConf.PermittedChatIDs))
+	fmt.Println(config)
+	return config, nil
 }

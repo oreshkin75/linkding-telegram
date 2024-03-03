@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -23,7 +24,7 @@ const (
 type Telegram struct {
 	botToken          string
 	tgApiUrlWithToken string
-	permittedChatID   int
+	permittedChatIDs  []int
 	pollIntervalSec   int
 	linkding          *linkding.Linkding
 	log               *logrus.Logger
@@ -36,7 +37,7 @@ func New(opts *config.Config, linkding *linkding.Linkding, log *logrus.Logger) *
 		tgApiUrlWithToken: tgApiURL + opts.TGBotConf.Token,
 		log:               log,
 		linkding:          linkding,
-		permittedChatID:   opts.TGBotConf.PermittedChatID,
+		permittedChatIDs:  opts.TGBotConf.PermittedChatIDs,
 		pollIntervalSec:   opts.TGBotConf.PollIntervalSec,
 	}
 
@@ -47,45 +48,6 @@ func New(opts *config.Config, linkding *linkding.Linkding, log *logrus.Logger) *
 	}
 
 	return ret
-}
-
-/*func (t *Telegram) getUpdates(ctx context.Context, offset string) ([]Update, error) {
-	baseURL, err := url.Parse(t.tgApiUrlWithToken + getUpdatesMethod)
-	if err != nil {
-		return nil, fmt.Errorf("failed to parse get updates url: %w", err)
-	}
-
-	params := url.Values{}
-	params.Add("offset", offset)
-
-	baseURL.RawQuery = params.Encode()
-
-	req, err := http.NewRequestWithContext(ctx, "GET", baseURL.String(), nil)
-	if err != nil {
-		return nil, fmt.Errorf("failed to make get updates GET request: %w", err)
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create http client: %w", err)
-	}
-
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("failed to read get updated body: %w", err)
-	}
-
-	var restResponse struct {
-		Result []Update `json:"result"`
-	}
-
-	if err := json.Unmarshal(body, &restResponse); err != nil {
-		return nil, fmt.Errorf("faile to unmarshal get updates body: %w", err)
-	}
-
-	return restResponse.Result, nil
 }
 
 func (t *Telegram) sendMessage(ctx context.Context, chatID int64, text string) error {
@@ -112,44 +74,6 @@ func (t *Telegram) sendMessage(ctx context.Context, chatID int64, text string) e
 
 	return nil
 }
-
-func (t *Telegram) PollUpdates(ctx context.Context) {
-	var lastUpdateID int
-	for {
-		select {
-		case <-ctx.Done():
-			t.log.Info("receiving updates has been stopped")
-			return
-		default:
-			updates, err := t.getUpdates(ctx, fmt.Sprintf("%d", lastUpdateID+1))
-			if err != nil {
-				t.log.Error("failed to get updates from telegram")
-				continue
-			}
-			fmt.Println("===", updates)
-			for _, update := range updates {
-				for _, entity := range update.Message.MessageEntities {
-					if entity.Url != "" {
-						_, err := t.linkding.CreateBookmark(ctx, &linkding.CreateBookmark{
-							URL:      entity.Url,
-							Unread:   true,
-							TagNames: []string{update.Message.MessageOrigin.Chat.Username},
-						})
-
-						if err != nil {
-							t.log.Error(err)
-							continue
-						}
-					}
-				}
-
-				lastUpdateID = update.UpdateID
-			}
-
-			time.Sleep(1 * time.Second)
-		}
-	}
-}*/
 
 func (t *Telegram) getUpdates(ctx context.Context, offset string) (Response, error) {
 	baseURL, err := url.Parse(t.tgApiUrlWithToken + getUpdatesMethod)
@@ -203,7 +127,7 @@ func (t *Telegram) PollUpdates(ctx context.Context) {
 			}
 
 			for _, update := range response.Result {
-				if !t.checkChatID(update.UpdateID) {
+				if !t.checkChatID(int(update.Message.Chat.ID)) {
 					t.log.WithFields(logrus.Fields{
 						"chatID": update.UpdateID,
 					}).Info("message received from an unauthorized user")
@@ -227,12 +151,14 @@ func (t *Telegram) GetUpdate() <-chan Update {
 }
 
 func (t *Telegram) checkChatID(chatID int) bool {
-	if t.permittedChatID == 0 {
+	if len(t.permittedChatIDs) == 0 {
 		return true
 	}
 
-	if t.permittedChatID == chatID {
-		return true
+	for _, permittedChatID := range t.permittedChatIDs {
+		if permittedChatID == chatID {
+			return true
+		}
 	}
 
 	return false
