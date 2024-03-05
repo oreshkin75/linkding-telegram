@@ -22,7 +22,6 @@ const (
 )
 
 type Telegram struct {
-	botToken          string
 	tgApiUrlWithToken string
 	permittedChatIDs  []int
 	pollIntervalSec   int
@@ -32,22 +31,14 @@ type Telegram struct {
 }
 
 func New(opts *config.Config, linkding *linkding.Linkding, log *logrus.Logger) *Telegram {
-	ret := &Telegram{
-		botToken:          opts.TGBotConf.Token,
+	return &Telegram{
 		tgApiUrlWithToken: tgApiURL + opts.TGBotConf.Token,
 		log:               log,
 		linkding:          linkding,
 		permittedChatIDs:  opts.TGBotConf.PermittedChatIDs,
 		pollIntervalSec:   opts.TGBotConf.PollIntervalSec,
+		updates:           make(chan Update, opts.TGBotConf.UpdatesBufferSize),
 	}
-
-	if opts.TGBotConf.UpdatesBufferSize < 1 {
-		ret.updates = make(chan Update, 1)
-	} else {
-		ret.updates = make(chan Update, opts.TGBotConf.UpdatesBufferSize)
-	}
-
-	return ret
 }
 
 func (t *Telegram) sendMessage(ctx context.Context, chatID int64, text string) error {

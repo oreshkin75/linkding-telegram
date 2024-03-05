@@ -66,8 +66,7 @@ func main() {
 	go tg.PollUpdates(context.Background())
 
 	for update := range tg.GetUpdate() {
-		fmt.Println("++++", update.Message.LinkPrev)
-		fmt.Println("====", update)
+		fmt.Println("===", update.Message.SenderChat.Type)
 		for _, entity := range update.Message.MessageEntities {
 			fmt.Println("----", entity)
 		}
