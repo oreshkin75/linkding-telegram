@@ -2,58 +2,34 @@ package config
 
 import (
 	"fmt"
-	"github.com/spf13/viper"
+	"github.com/caarlos0/env/v10"
 )
 
 type Config struct {
-	TGBotConf    TGBotConf
-	LinkdingConf LinkdingConf
-	LogLevel     string
-	LogFile      string
+	TGBotConf    TGBotConf    `envPrefix:"BOT_"`
+	LinkdingConf LinkdingConf `envPrefix:"LINKDING_"`
+	LogLevel     string       `env:"LOG_LEVEL" envDefault:"info"`
+	LogFile      string       `env:"LOG_FILE"`
 }
 
 type TGBotConf struct {
-	Token             string
-	UpdatesBufferSize int
-	PermittedChatIDs  []int
-	PollIntervalSec   int
+	Token             string `env:"TOKEN"`
+	UpdatesBufferSize int    `env:"UPDATES_BUFFER_SIZE" envDefault:"1"`
+	PermittedChatIDs  []int  `env:"PERMITTED_CHAT_IDS" envSeparator:","`
+	PollIntervalSec   int    `env:"POLL_INTERVAL_SECOND" envDefault:"1"`
 }
 
 type LinkdingConf struct {
-	LinkdingAddr string
-	UserToken    string
+	LinkdingAddr string `env:"ADDRESS"`
+	UserToken    string `env:"USER_TOKEN"`
 }
 
 func GetConfig() (*Config, error) {
-	viper.SetEnvPrefix("LGTG")
-	viper.AutomaticEnv()
-
-	viper.SetDefault("BOT_TOKEN", "")
-	viper.SetDefault("BOT_UPDATES_BUFFER_SIZE", 1)
-	viper.SetDefault("BOT_PERMITTED_CHAT_IDS", []int{})
-	viper.SetDefault("BOT_POLL_INTERVAL_SECOND", 1)
-	viper.SetDefault("LINKDING_ADDRESS", "")
-	viper.SetDefault("LINKDING_USER_TOKEN", "")
-	viper.SetDefault("LOG_LEVEL", "info")
-	viper.SetDefault("LOG_FILE", "")
-
-	fmt.Println("---", viper.GetStringSlice("BOT_PERMITTED_CHAT_ID"))
-	config := &Config{
-		TGBotConf: TGBotConf{
-			Token:             viper.GetString("BOT_TOKEN"),
-			UpdatesBufferSize: viper.GetInt("BOT_UPDATES_BUFFER_SIZE"),
-			PermittedChatIDs:  viper.GetIntSlice("BOT_PERMITTED_CHAT_ID"),
-			PollIntervalSec:   viper.GetInt("BOT_POLL_INTERVAL_SECOND"),
-		},
-		LinkdingConf: LinkdingConf{
-			LinkdingAddr: viper.GetString("LINKDING_ADDRESS"),
-			UserToken:    viper.GetString("LINKDING_USER_TOKEN"),
-		},
-		LogLevel: viper.GetString("LOG_LEVEL"),
-		LogFile:  viper.GetString("LOG_FILE"),
+	cfg := Config{}
+	if err := env.Parse(&cfg); err != nil {
+		fmt.Printf("%+v\n", err)
+		return nil, err
 	}
 
-	fmt.Println("====", config.TGBotConf.PermittedChatIDs, len(config.TGBotConf.PermittedChatIDs))
-	fmt.Println(config)
-	return config, nil
+	return &cfg, nil
 }
