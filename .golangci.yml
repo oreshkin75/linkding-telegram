@@ -1,13 +1,19 @@
 run:
   timeout: 5m
-  skip-dirs:
-    - internal/mocks
 
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
 
 linters-settings:
+  forbidigo:
+    forbid:
+      - fmt.Print
+      - fmt.Println
+      - fmt.Printf
+      - fmt.Fprintf
+      - fmt.Fprint
+      - fmt.Fprintln
   gofmt:
     simplify: true
   govet:
