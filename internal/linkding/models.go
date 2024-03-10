@@ -1,6 +1,6 @@
 package linkding
 
-type CreateBookmark struct {
+type CreateBookmarkReqBody struct {
 	URL         string   `json:"url"`
 	Title       string   `json:"title,omitempty"`
 	Description string   `json:"description,omitempty"`

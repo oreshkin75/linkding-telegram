@@ -1,7 +1,6 @@
 package telegram
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -39,31 +38,6 @@ func New(opts *config.Config, linkding *linkding.Linkding, log *logrus.Logger) *
 		pollIntervalSec:   opts.TGBotConf.PollIntervalSec,
 		updates:           make(chan Update, opts.TGBotConf.UpdatesBufferSize),
 	}
-}
-
-func (t *Telegram) sendMessage(ctx context.Context, chatID int64, text string) error {
-	reqBody := &SendMessageReqBody{
-		ChatID: chatID,
-		Text:   text,
-	}
-
-	reqBytes, err := json.Marshal(reqBody)
-	if err != nil {
-		return fmt.Errorf("failed to marshal send message body: %w", err)
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", t.tgApiUrlWithToken+sendMessageMethod, bytes.NewBuffer(reqBytes))
-	if err != nil {
-		return fmt.Errorf("failed to make send message POST request: %w", err)
-	}
-
-	req.Header.Add("Content-Type", "application/json")
-
-	if _, err = http.DefaultClient.Do(req); err != nil {
-		return fmt.Errorf("failed to create http client: %w", err)
-	}
-
-	return nil
 }
 
 func (t *Telegram) getUpdates(ctx context.Context, offset string) (Response, error) {

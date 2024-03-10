@@ -60,15 +60,37 @@ func main() {
 		log.Fatalf("failed to setup logger: %s", err.Error())
 	}
 
-	linkding := linkding.New(config, log)
-	tg := telegram.New(config, linkding, log)
+	lnkdng := linkding.New(config, log)
+	tg := telegram.New(config, lnkdng, log)
 
-	go tg.PollUpdates(context.Background())
+	ctx := context.Background()
+
+	go tg.PollUpdates(ctx)
 
 	for update := range tg.GetUpdate() {
-		fmt.Println("===", update.Message.SenderChat.Type)
-		for _, entity := range update.Message.MessageEntities {
-			fmt.Println("----", entity)
+		var tags []string
+		if update.Message.MessageOrigin.Chat.Username != "" {
+			tags = append(tags, update.Message.MessageOrigin.Chat.Username)
 		}
+
+		if config.LinkdingConf.DefaultTag != "" {
+			tags = append(tags, config.LinkdingConf.DefaultTag)
+		}
+
+		var req *linkding.CreateBookmarkReqBody
+		if len(tags) > 0 {
+			req = &linkding.CreateBookmarkReqBody{
+				URL:      update.Message.LinkPrev.Url,
+				Unread:   true,
+				TagNames: tags,
+			}
+		} else {
+			req = &linkding.CreateBookmarkReqBody{
+				URL:    update.Message.LinkPrev.Url,
+				Unread: true,
+			}
+		}
+
+		lnkdng.CreateBookmark(ctx, req)
 	}
 }

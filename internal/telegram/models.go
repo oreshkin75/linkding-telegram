@@ -45,8 +45,3 @@ type MessageOriginChannel struct {
 type LinkPrev struct {
 	Url string `json:"url,omitempty"`
 }
-
-type SendMessageReqBody struct {
-	ChatID int64  `json:"chat_id"`
-	Text   string `json:"text"`
-}

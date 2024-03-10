@@ -21,6 +21,7 @@ type TGBotConf struct {
 type LinkdingConf struct {
 	LinkdingAddr string `env:"ADDRESS,notEmpty"`
 	UserToken    string `env:"USER_TOKEN,notEmpty"`
+	DefaultTag   string `env:"DEFAULT_TAG"`
 }
 
 func GetConfig() (*Config, error) {

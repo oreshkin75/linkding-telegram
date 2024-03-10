@@ -4,6 +4,9 @@ VERSION=latest
 
 DOCKERFILE_PATH=.
 
+lint:
+	golangci-lint run
+	
 build: clean
 	docker build -t $(IMAGE_NAME):$(VERSION) $(DOCKERFILE_PATH)
 
