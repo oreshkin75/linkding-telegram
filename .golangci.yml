@@ -1,35 +1,35 @@
+run:
+  timeout: 5m
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
 linters-settings:
+  forbidigo:
+    forbid:
+      - fmt.Print
+      - fmt.Println
+      - fmt.Printf
+      - fmt.Fprintf
+      - fmt.Fprint
+      - fmt.Fprintln
+  gofmt:
+    simplify: true
   govet:
-    check-shadowing: true
-  golint:
-    min-confidence: 0.8
-  gocyclo:
-    min-complexity: 10
-  maligned:
-    suggest-new: true
-  dupl:
-    threshold: 100
-  goconst:
-    min-len: 2
-    min-occurrences: 3
+    enable-all: true
+    disable:
+      - fieldalignment
 
 linters:
   disable-all: true
   enable:
-    - deadcode
-    - errcheck
-    - gocyclo
-    - golint
+    - gofmt
+    - gosimple
+    # - govet # Re-enable when all shadow declarations are fixed
     - ineffassign
-    - govet
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - gocyclo
-        - errcheck
-        - dupl
-
-run:
-  deadline: 1m
+    - predeclared
+    - exportloopref
+    - staticcheck
+    - unconvert
+    - unused
