@@ -72,7 +72,7 @@ func (l *Linkding) GetBookmarks(ctx context.Context, filters, limit, offset stri
 	return body, nil
 }
 
-func (l *Linkding) CreateBookmark(ctx context.Context, opts *CreateBookmarkReqBody) ([]byte, error) {
+func (l *Linkding) CreateBookmark(ctx context.Context, opts *CreateBookmarkReqBody) (*CreateBookmarkResp, error) {
 	reqBytes, err := json.Marshal(opts)
 	if err != nil {
 		return nil, fmt.Errorf("failed to marshal create bookmark body: %w", err)
@@ -103,5 +103,11 @@ func (l *Linkding) CreateBookmark(ctx context.Context, opts *CreateBookmarkReqBo
 		return nil, fmt.Errorf("failed to read body: %w", err)
 	}
 
-	return body, nil
+	var response CreateBookmarkResp
+
+	if err := json.Unmarshal(body, &response); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal get create bookmark response: %w", err)
+	}
+
+	return &response, nil
 }

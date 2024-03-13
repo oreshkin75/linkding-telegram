@@ -91,6 +91,11 @@ func main() {
 			}
 		}
 
-		lnkdng.CreateBookmark(ctx, req)
+		body, err := lnkdng.CreateBookmark(ctx, req)
+		if err != nil {
+			log.Error("failed to create linkding bookmark: %s", err.Error())
+		}
+
+		fmt.Printf("%+v \n", body)
 	}
 }
