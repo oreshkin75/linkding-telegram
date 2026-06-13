@@ -15,13 +15,13 @@ import (
 )
 
 const (
-	tgApiURL          = "https://api.telegram.org/bot"
+	tgAPIURL          = "https://api.telegram.org/bot"
 	getUpdatesMethod  = "/getUpdates"
 	sendMessageMethod = "/sendMessage"
 )
 
 type Telegram struct {
-	tgApiUrlWithToken string
+	tgAPIURLWithToken string
 	permittedChatIDs  []int
 	pollIntervalSec   int
 	linkding          *linkding.Linkding
@@ -29,11 +29,11 @@ type Telegram struct {
 	updates           chan Update
 }
 
-func New(opts *config.Config, linkding *linkding.Linkding, log *logrus.Logger) *Telegram {
+func New(opts *config.Config, linkdingClient *linkding.Linkding, log *logrus.Logger) *Telegram {
 	return &Telegram{
-		tgApiUrlWithToken: tgApiURL + opts.TGBotConf.Token,
+		tgAPIURLWithToken: tgAPIURL + opts.TGBotConf.Token,
 		log:               log,
-		linkding:          linkding,
+		linkding:          linkdingClient,
 		permittedChatIDs:  opts.TGBotConf.PermittedChatIDs,
 		pollIntervalSec:   opts.TGBotConf.PollIntervalSec,
 		updates:           make(chan Update, opts.TGBotConf.UpdatesBufferSize),
@@ -41,7 +41,7 @@ func New(opts *config.Config, linkding *linkding.Linkding, log *logrus.Logger) *
 }
 
 func (t *Telegram) getUpdates(ctx context.Context, offset string) (Response, error) {
-	baseURL, err := url.Parse(t.tgApiUrlWithToken + getUpdatesMethod)
+	baseURL, err := url.Parse(t.tgAPIURLWithToken + getUpdatesMethod)
 	if err != nil {
 		return Response{}, fmt.Errorf("failed to parse get updates url: %w", err)
 	}
@@ -51,7 +51,7 @@ func (t *Telegram) getUpdates(ctx context.Context, offset string) (Response, err
 
 	baseURL.RawQuery = params.Encode()
 
-	req, err := http.NewRequestWithContext(ctx, "GET", baseURL.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL.String(), http.NoBody)
 	if err != nil {
 		return Response{}, fmt.Errorf("failed to make get updates GET request: %w", err)
 	}
@@ -61,7 +61,11 @@ func (t *Telegram) getUpdates(ctx context.Context, offset string) (Response, err
 		return Response{}, fmt.Errorf("failed to create http client: %w", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			t.log.Error(closeErr)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {

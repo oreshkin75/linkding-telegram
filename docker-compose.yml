@@ -1,11 +1,9 @@
-version: '3'
+version: "3"
 
 services:
   linkding-telegram:
     container_name: "linkding-telegram"
     image: linkding-telegram:latest
-    ports:
-      - "8080:8080"
     env_file:
       - .env
   linkding:

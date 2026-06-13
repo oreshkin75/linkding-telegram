@@ -51,7 +51,7 @@ func (l *Linkding) GetBookmarks(ctx context.Context, filters, limit, offset stri
 	baseURL.RawQuery = params.Encode()
 
 	client := &http.Client{}
-	req, err := http.NewRequestWithContext(ctx, "GET", baseURL.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", baseURL.String(), http.NoBody)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create get bookmarks GET request: %w", err)
 	}
@@ -63,7 +63,12 @@ func (l *Linkding) GetBookmarks(ctx context.Context, filters, limit, offset stri
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 
-	defer resp.Body.Close()
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			l.log.Error(closeErr)
+		}
+	}()
+
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read body: %w", err)
@@ -92,15 +97,19 @@ func (l *Linkding) CreateBookmark(ctx context.Context, opts *CreateBookmarkReqBo
 		return nil, fmt.Errorf("failed to send request: %w", err)
 	}
 
-	defer resp.Body.Close()
-
-	if resp.StatusCode != 201 {
-		l.log.Errorf("status code of POST %s - %d", l.addr+bookmarksMethods, resp.StatusCode)
-	}
+	defer func() {
+		if closeErr := resp.Body.Close(); closeErr != nil {
+			l.log.Error(closeErr)
+		}
+	}()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("failed to read body: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusCreated {
+		return nil, fmt.Errorf("failed to create bookmark: POST %s returned status %d: %s", l.addr+bookmarksMethods, resp.StatusCode, string(body))
 	}
 
 	return body, nil
