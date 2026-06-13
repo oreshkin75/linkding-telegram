@@ -17,7 +17,9 @@ type Message struct {
 	SenderChat      Chat                 `json:"sender_chat,omitempty"`
 	Chat            Chat                 `json:"chat,omitempty"`
 	Text            string               `json:"text,omitempty"`
-	MessageEntities []MessageEntity      `json:"caption_entities,omitempty"`
+	Caption         string               `json:"caption,omitempty"`
+	Entities        []MessageEntity      `json:"entities,omitempty"`
+	CaptionEntities []MessageEntity      `json:"caption_entities,omitempty"`
 	MessageOrigin   MessageOriginChannel `json:"forward_origin,omitempty"`
 	LinkPrev        LinkPrev             `json:"link_preview_options,omitempty"`
 }
@@ -32,7 +34,7 @@ type MessageEntity struct {
 	Type   string `json:"type"`
 	Offset int64  `json:"offset"`
 	Length int64  `json:"length"`
-	Url    string `json:"url,omitempty"`
+	URL    string `json:"url,omitempty"`
 }
 
 type MessageOriginChannel struct {
@@ -43,5 +45,5 @@ type MessageOriginChannel struct {
 }
 
 type LinkPrev struct {
-	Url string `json:"url,omitempty"`
+	URL string `json:"url,omitempty"`
 }

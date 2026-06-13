@@ -1,35 +1,200 @@
+version: "2"
+
 run:
   timeout: 5m
+  tests: true
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  enable:
+    # Базовая корректность
+    - govet
+    - staticcheck
+    - errcheck
+    - ineffassign
+    - unused
+
+    # Ошибки, nil, resource leaks
+    - bodyclose
+    - nilerr
+    - nilnil
+    - noctx
+    - rowserrcheck
+    - sqlclosecheck
+    - wastedassign
+
+    # Clean code / maintainability
+    - revive
+    - gocritic
+    - cyclop
+    - funlen
+    - gocognit
+    - goconst
+    - maintidx
+    - nestif
+    - unconvert
+    - unparam
+    - prealloc
+    - whitespace
+
+    # Style / imports / formatting
+    - misspell
+    - godot
+    - importas
+    - copyloopvar
+
+    # Security
+    - gosec
+
+    # Архитектурная гигиена
+    - depguard
+
+  exclusions:
+    rules:
+      # Тесты могут быть длиннее и проще по структуре
+      - path: _test\.go
+        linters:
+          - funlen
+          - gocognit
+          - cyclop
+          - maintidx
+          - gosec
+
+      # generated-код не трогаем
+      - path: ".*\\.pb\\.go"
+        linters:
+          - revive
+          - gocritic
+          - funlen
+          - gocognit
+          - cyclop
+          - maintidx
+
+      - path: ".*\\.gen\\.go"
+        linters:
+          - revive
+          - gocritic
+          - funlen
+          - gocognit
+          - cyclop
+          - maintidx
+
+      # main.go часто содержит wiring / bootstrap
+      - path: "cmd/.*/main\\.go"
+        linters:
+          - funlen
+          - gocognit
+          - cyclop
+          - maintidx
+
+  settings:
+    errcheck:
+      check-type-assertions: true
+      check-blank: true
+
+    govet:
+      enable:
+        - shadow
+
+    cyclop:
+      max-complexity: 12
+      package-average: 0.0
+
+    gocognit:
+      min-complexity: 15
+
+    funlen:
+      lines: 80
+      statements: 50
+      ignore-comments: true
+
+    nestif:
+      min-complexity: 5
+
+    maintidx:
+      under: 20
+
+    goconst:
+      min-len: 3
+      min-occurrences: 3
+
+    gocritic:
+      enabled-tags:
+        - diagnostic
+        - performance
+        - style
+      disabled-checks:
+        - hugeParam
+        - rangeValCopy
+        - unnamedResult
+        - whyNoLint
+
+    revive:
+      severity: warning
+      rules:
+        - name: blank-imports
+        - name: context-as-argument
+        - name: context-keys-type
+        - name: dot-imports
+        - name: error-return
+        - name: error-strings
+        - name: error-naming
+        - name: exported
+          disabled: true
+        - name: if-return
+        - name: increment-decrement
+        - name: var-naming
+        - name: var-declaration
+        - name: package-comments
+          disabled: true
+        - name: range
+        - name: receiver-naming
+        - name: time-naming
+        - name: unexported-return
+        - name: indent-error-flow
+        - name: errorf
+        - name: superfluous-else
+        - name: unused-parameter
+        - name: unreachable-code
+        - name: redefines-builtin-id
+
+    godot:
+      scope: declarations
+      capital: true
+
+    gosec:
+      excludes:
+        - G204
+        - G102
+        - G302
+        - G306
+
+    depguard:
+      rules:
+        main:
+          deny:
+            - pkg: "github.com/pkg/errors"
+              desc: "Use standard errors package with fmt.Errorf and errors.Is/As"
+            - pkg: "io/ioutil"
+              desc: "Deprecated since Go 1.16; use os or io instead"
+
+    importas:
+      no-unaliased: false
+      alias:
+        - pkg: github.com/jackc/pgx/v5
+          alias: pgx
+        - pkg: github.com/jackc/pgx/v5/pgxpool
+          alias: pgxpool
+
+    misspell:
+      locale: US
+
+formatters:
+  enable:
+    - gofumpt
+    - goimports
 
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0
-
-linters-settings:
-  forbidigo:
-    forbid:
-      - fmt.Print
-      - fmt.Println
-      - fmt.Printf
-      - fmt.Fprintf
-      - fmt.Fprint
-      - fmt.Fprintln
-  gofmt:
-    simplify: true
-  govet:
-    enable-all: true
-    disable:
-      - fieldalignment
-
-linters:
-  disable-all: true
-  enable:
-    - gofmt
-    - gosimple
-    # - govet # Re-enable when all shadow declarations are fixed
-    - ineffassign
-    - predeclared
-    - exportloopref
-    - staticcheck
-    - unconvert
-    - unused

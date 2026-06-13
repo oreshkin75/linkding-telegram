@@ -7,53 +7,36 @@ import (
 )
 
 func TestConfig(t *testing.T) {
-	testCase := []struct {
-		name  string
-		input struct {
-			linkdingAddr string
-			botToken     string
-			logLevel     string
-		}
-		expected struct {
-			linkdingAddr string
-			botToken     string
-			logLevel     string
-		}
-	}{{
-		name: "Simple test",
-		input: struct {
-			linkdingAddr string
-			botToken     string
-			logLevel     string
-		}{
-			linkdingAddr: "192.168.1.1",
-			botToken:     "AFBHASBFAJKFNAKBFAHFA",
-			logLevel:     "info",
+	testCases := []struct {
+		name          string
+		linkdingAddr  string
+		linkdingToken string
+		botToken      string
+		logLevel      string
+	}{
+		{
+			name:          "reads current environment variables",
+			linkdingAddr:  "http://192.168.1.1:9090",
+			linkdingToken: "linkding-token",
+			botToken:      "telegram-token",
+			logLevel:      "info",
 		},
-		expected: struct {
-			linkdingAddr string
-			botToken     string
-			logLevel     string
-		}{
-			linkdingAddr: "192.168.1.1",
-			botToken:     "AFBHASBFAJKFNAKBFAHFA",
-			logLevel:     "info",
-		},
-	},
 	}
 
-	for _, tc := range testCase {
+	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			t.Setenv("LGTG_BOT_TOKEN", tc.input.botToken)
-			t.Setenv("LGTG_LINKDING_ADDRESS", tc.input.linkdingAddr)
-			t.Setenv("LGTG_LOG_LEVEL", tc.input.logLevel)
+			t.Setenv("BOT_TOKEN", tc.botToken)
+			t.Setenv("LINKDING_ADDRESS", tc.linkdingAddr)
+			t.Setenv("LINKDING_USER_TOKEN", tc.linkdingToken)
+			t.Setenv("LOG_LEVEL", tc.logLevel)
 
 			config, err := GetConfig()
 			assert.NoError(t, err)
 
-			assert.Equal(t, config.LinkdingConf.LinkdingAddr, tc.expected.linkdingAddr)
-			assert.Equal(t, config.TGBotConf.Token, tc.expected.botToken)
-			assert.Equal(t, config.LogLevel, tc.expected.logLevel)
+			assert.Equal(t, tc.linkdingAddr, config.LinkdingConf.LinkdingAddr)
+			assert.Equal(t, tc.linkdingToken, config.LinkdingConf.UserToken)
+			assert.Equal(t, tc.botToken, config.TGBotConf.Token)
+			assert.Equal(t, tc.logLevel, config.LogLevel)
 		})
 	}
 }

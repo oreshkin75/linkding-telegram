@@ -26,7 +26,7 @@ func init() {
 
 func setupLogger(logLevel, logPath string) error {
 	if logPath != "" {
-		file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+		file, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o666) //nolint:gosec // log path is intentionally configured by the service operator.
 		if err != nil {
 			return fmt.Errorf("failed to open/create log file: %w", err)
 		}
@@ -51,46 +51,68 @@ func setupLogger(logLevel, logPath string) error {
 }
 
 func main() {
-	config, err := config.GetConfig()
+	appConfig, err := config.GetConfig()
 	if err != nil {
 		log.Fatalf("failed to read configuration file: %s", err.Error())
 	}
 
-	if err := setupLogger(config.LogLevel, config.LogFile); err != nil {
+	if err := setupLogger(appConfig.LogLevel, appConfig.LogFile); err != nil {
 		log.Fatalf("failed to setup logger: %s", err.Error())
 	}
 
-	lnkdng := linkding.New(config, log)
-	tg := telegram.New(config, lnkdng, log)
+	lnkdng := linkding.New(appConfig, log)
+	tg := telegram.New(appConfig, lnkdng, log)
 
 	ctx := context.Background()
 
 	go tg.PollUpdates(ctx)
 
 	for update := range tg.GetUpdate() {
-		var tags []string
-		if update.Message.MessageOrigin.Chat.Username != "" {
-			tags = append(tags, update.Message.MessageOrigin.Chat.Username)
-		}
-
-		if config.LinkdingConf.DefaultTag != "" {
-			tags = append(tags, config.LinkdingConf.DefaultTag)
-		}
-
-		var req *linkding.CreateBookmarkReqBody
-		if len(tags) > 0 {
-			req = &linkding.CreateBookmarkReqBody{
-				URL:      update.Message.LinkPrev.Url,
-				Unread:   true,
-				TagNames: tags,
-			}
-		} else {
-			req = &linkding.CreateBookmarkReqBody{
-				URL:    update.Message.LinkPrev.Url,
-				Unread: true,
-			}
-		}
-
-		lnkdng.CreateBookmark(ctx, req)
+		processUpdate(ctx, update, appConfig, lnkdng)
 	}
+}
+
+func processUpdate(ctx context.Context, update telegram.Update, appConfig *config.Config, lnkdng *linkding.Linkding) {
+	urls := update.Message.ExtractURLs()
+	if len(urls) == 0 {
+		log.WithFields(logrus.Fields{
+			"messageID": update.Message.MessageID,
+			"chatID":    update.Message.Chat.ID,
+		}).Warn("message does not contain URLs")
+
+		return
+	}
+
+	tags := bookmarkTags(update.Message, appConfig.LinkdingConf.DefaultTag)
+	for _, rawURL := range urls {
+		req := bookmarkRequest(rawURL, tags)
+		if _, err := lnkdng.CreateBookmark(ctx, req); err != nil {
+			log.Fatalf("failed to create bookmark in Linkding: %s", err.Error())
+		}
+	}
+}
+
+func bookmarkTags(message telegram.Message, defaultTag string) []string {
+	var tags []string
+	if message.MessageOrigin.Chat.Username != "" {
+		tags = append(tags, message.MessageOrigin.Chat.Username)
+	}
+
+	if defaultTag != "" {
+		tags = append(tags, defaultTag)
+	}
+
+	return tags
+}
+
+func bookmarkRequest(rawURL string, tags []string) *linkding.CreateBookmarkReqBody {
+	req := &linkding.CreateBookmarkReqBody{
+		URL:    rawURL,
+		Unread: true,
+	}
+	if len(tags) > 0 {
+		req.TagNames = tags
+	}
+
+	return req
 }
